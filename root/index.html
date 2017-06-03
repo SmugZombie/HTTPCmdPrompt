@@ -1,0 +1,167 @@
+
+<style>
+#commands-output {
+    margin: 0px 0px 30px 0px;
+}
+
+.command-output {
+    background-color: #000;
+    color: #C0C0C0;
+    padding: 5px;
+    outline: 5px solid #BBB;
+}
+</style>
+
+<textarea id="terminal" class="command-output" cols="91" rows="25" spellcheck="false">Ron's Remote Access Terminal
+</textarea>
+
+
+<script
+  src="https://code.jquery.com/jquery-2.2.4.min.js"
+  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+  crossorigin="anonymous"></script>
+<script>
+    currentDirectory = "/";
+    function getLocalStorage(name){ 
+        now = parseInt(new Date() / 1000);
+        expires = localStorage.getItem(name+"_expire");
+        if(!expires){ return localStorage.getItem(name); }  
+        else if(now >= expires){ localStorage.removeItem(name+"_expire"); localStorage.removeItem(name); return ""; }
+        else{ return localStorage.getItem(name); }   
+    }
+
+    function setLocalStorage(name, value, minutes){ 
+        if(minutes == null){ localStorage.setItem(name, value); localStorage.removeItem(name+"_expire"); return true} // No set expiration
+        else if(minutes == 0){ localStorage.removeItem(name); localStorage.removeItem(name+"_expire"); return true} // Setting to 0 kills the localStorage Item any any expiration
+        else{ 
+            epochExpire = parseInt(new Date() / 1000 + (minutes * 60));
+            localStorage.setItem(name, value); localStorage.setItem(name+"_expire", epochExpire); 
+            return true
+        }
+        return false
+    }
+
+    function validate(){
+        currentTerminal = terminal.value;
+        //input = currentTerminal.replace(getLocalStorage("terminal"), "").trim().split(" ");
+        input = currentTerminal.replace(getLocalStorage("terminal"), "").trim();
+        //command = input[0];
+        //input.shift();
+        //parameters = input;
+        //response = 
+        RunCommand(input);
+        //currentTerminal = currentTerminal + response;
+
+
+        /*
+        terminal.value = currentTerminal; //removeLastLine(currentTerminal);
+        terminal.value +=  "\nC:\\> ";
+        //terminal.value = terminal.value.trim();
+
+        
+        setLocalStorage("terminal", terminal.value, 10);
+        checkTextareaHeight();
+        */
+    }
+
+    function getCWD(){
+        $.get( "/cwd", function( data ) {
+            console.log(data);
+            window.cwd = data.trim();
+            currentTerminal = terminal.value;
+            //currentTerminal = currentTerminal + data;
+
+            terminal.value = currentTerminal; //removeLastLine(currentTerminal);
+            terminal.value +=  "\n"+window.cwd+"> ";
+
+            setLocalStorage("terminal", terminal.value, 10);
+            checkTextareaHeight();
+        });
+    }
+
+    function RunCommand(input){
+        /*switch(command) {
+            case "hello": response = "How are you?"; break
+            case "clear": terminal.value = ""; response = ""; break
+            case "pwd": response = window.currentDirectory; break
+            case "who": terminal.value = ""; response = "GOD"; break
+            case "passwd": response = "Uh.. No."; break
+            case "logout": case "reboot": case "shutdown": response = "Bye!"; case "exit": location.reload(); break
+            case "login": response = "you are already logged in as god..."; break
+            case "cd": if(changeDirectory(parameters)){ response = "cd "+changeDirectory(parameters); }else{ response = "file or directory not found";}; break
+            default: response = "Invalid Command : " + command;
+        }*/
+
+        $.get( "command?{\"command\":\"" + input + "\"}", function( data ) {
+            console.log(input);
+            currentTerminal = terminal.value;
+            response = data;
+            currentTerminal = currentTerminal + response;
+
+            terminal.value = currentTerminal; //removeLastLine(currentTerminal);
+            terminal.value +=  "\n"+window.cwd+"> ";
+            //terminal.value = terminal.value.trim();
+
+            
+            setLocalStorage("terminal", terminal.value, 10);
+            checkTextareaHeight();
+        });
+    }
+
+    function changeDirectory(directory){
+        currentDirectory = window.currentDirectory;
+        root_dirs = ["Program Files","Windows","Users","Temp"];
+
+        if(currentDirectory == "/"){
+            if(root_dirs.indexOf(directory)){
+                window.currentDirectory = directory;
+                return directory;
+            }
+            else{
+                return 0;
+            }
+        }
+    }
+
+    function checkTextareaHeight(){
+        var terminal = document.getElementById("terminal");
+        if(terminal.selectionStart == terminal.selectionEnd) {
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+    }
+
+    function verifyTerminal(){
+        currentTerminal = terminal.value;
+
+        if(currentTerminal.includes(getLocalStorage("terminal"))){
+
+        }
+        else{
+            terminal.value = getLocalStorage("terminal");
+        }
+    }
+
+    function removeLastLine(x){
+        if(x.lastIndexOf("\n")>0) {
+            return x.substring(0, x.lastIndexOf("\n"));
+        } else {
+            return x;
+        }
+    }
+
+    document.getElementById("terminal").scrollTop = document.getElementById("terminal").scrollHeight
+    setLocalStorage("terminal", terminal.value, 10);
+
+    terminal.addEventListener("keyup", function (e) {
+    verifyTerminal();
+    if (e.keyCode === 13) { validate(); }
+    });
+
+    getCWD();
+
+    terminal.focus();
+    terminal.setSelectionRange(terminal.value.length, terminal.value.length);  
+
+
+    //command?{"command":"whoami"}
+</script>
