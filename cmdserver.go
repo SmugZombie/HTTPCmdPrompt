@@ -1,9 +1,9 @@
 package main
 
-// cmdserver.go
+// CMDServer.go
 // Simple CMD Server for Windows
 // Ron Egli - github.com/smugzombie
-// Version 0.2
+// Version 0.3
 
 import (
     "fmt"
@@ -21,9 +21,17 @@ type command_struct struct {
     Command string
 }
 
+type errorString struct {
+    s string
+}
+
+func (e *errorString) Error() string {
+    return e.s
+}
+
 func main() {
     // Serve Root
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, r.URL.Path[1:]) })
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, r.URL.Path[1:]+"root/") })
     // Test WHOAMI function
     http.HandleFunc("/whoami", whoami)
     // Kill the server
@@ -32,6 +40,7 @@ func main() {
     http.HandleFunc("/command", command)
     // Get CWD
     http.HandleFunc("/cwd", cwd)
+
     // Start the server
     log.Fatal(http.ListenAndServe(":8081", nil))
 }
