@@ -65,7 +65,7 @@
     }
 
     function getCWD(){
-        $.get( "/cwd", function( data ) {
+        $.get( "./cwd", function( data ) {
             console.log(data);
             window.cwd = data.trim();
             currentTerminal = terminal.value;
@@ -92,7 +92,7 @@
             default: response = "Invalid Command : " + command;
         }*/
 
-        $.get( "command?{\"command\":\"" + input + "\"}", function( data ) {
+        $.get( "./command?{\"command\":\"" + input + "\"}", function( data ) {
             console.log(input);
             currentTerminal = terminal.value;
             response = data;
